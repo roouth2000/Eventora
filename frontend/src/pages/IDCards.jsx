@@ -40,8 +40,6 @@ export default function IDCards() {
   });
 
   const handlePrintSingle = (attendee) => {
-    // Basic single card print approach: set preview to active, trigger print.
-    // In clean implementations, print CSS ignores everything except the active printable preview modal.
     setPreviewAttendee(attendee);
     setTimeout(() => {
       window.print();
@@ -52,6 +50,42 @@ export default function IDCards() {
     window.print();
   };
 
+  const handleDownloadSingle = (attendee) => {
+    const svgElement = document.querySelector('#printable-badge .badge-qr-container svg');
+    if (!svgElement) return;
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = svgUrl;
+    downloadLink.download = `${attendee.name.toLowerCase().replace(/\s+/g, '-')}-qr.svg`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  const handleDownloadAll = () => {
+    const cards = document.querySelectorAll('.id-cards-container .badge-grid .badge-card');
+    cards.forEach((card, idx) => {
+      const attendee = filtered[idx];
+      if (!attendee) return;
+      const svg = card.querySelector('.badge-qr-container svg');
+      if (!svg) return;
+
+      const svgString = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = svgUrl;
+      downloadLink.download = `${attendee.name.toLowerCase().replace(/\s+/g, '-')}-qr.svg`;
+      document.body.appendChild(downloadLink);
+      setTimeout(() => {
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }, idx * 150);
+    });
+  };
+
   return (
     <div className="id-cards-container">
       <div className="page-header">
@@ -60,7 +94,7 @@ export default function IDCards() {
           <p>Generate, preview and print attendee badges with embedded QR codes.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={() => alert('Download requested for all badges')}>
+          <button className="btn btn-secondary" onClick={handleDownloadAll}>
             <Download size={16} /> Download All
           </button>
           <button className="btn btn-primary" onClick={handlePrintVisible}>
@@ -178,6 +212,13 @@ export default function IDCards() {
             <div style={{ padding: '16px 24px', backgroundColor: 'var(--bg-primary)', display: 'flex', gap: '12px' }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setPreviewAttendee(null)}>
                 Close
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                style={{ flex: 1 }}
+                onClick={() => handleDownloadSingle(previewAttendee)}
+              >
+                <Download size={14} /> Download QR
               </button>
               <button 
                 className="btn btn-primary" 

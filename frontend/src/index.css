@@ -1411,6 +1411,33 @@ input:checked+.slider:before {
     color: black !important;
   }
 
+  /* When printing a single badge/modal, hide everything except the modal content */
+  body:has(.modal-overlay) .app-container {
+    display: none !important;
+  }
+
+  body:has(.modal-overlay) .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  body:has(.modal-overlay) .modal-content {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+
+  body:has(.modal-overlay) .modal-footer,
+  body:has(.modal-overlay) button {
+    display: none !important;
+  }
+
   .sidebar,
   .top-navbar,
   .page-header,
