@@ -6,7 +6,13 @@
 // We fetch the API gateway from settings or default to the production/local url
 const getBaseUrl = () => {
   const settings = localStorage.getItem('api_gateway');
-  return settings || 'https://eventora.heavenwebtechnologies.com/api/v1';
+  if (settings) return settings;
+  
+  // Auto-detect local development environment vs production domain
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api/v1';
+  }
+  return 'https://eventora.heavenwebtechnologies.com/api/v1';
 };
 
 const getHeaders = (token = null) => {

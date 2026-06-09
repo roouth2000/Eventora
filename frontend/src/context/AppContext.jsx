@@ -128,9 +128,9 @@ export const AppProvider = ({ children }) => {
     setBackendLoading(true);
     try {
       const allEventsData = await api.getEvents();
-      setEvents(allEventsData.data || []);
+      setEvents(allEventsData.data?.events || []);
       const myEventsData = await api.getMyEvents();
-      setMyEvents(myEventsData.data || []);
+      setMyEvents(myEventsData.data?.events || []);
     } catch (err) {
       setBackendError(err.message || 'Failed to sync backend data.');
     } finally {
@@ -153,7 +153,7 @@ export const AppProvider = ({ children }) => {
       
       // Load events list
       const eventsData = await api.getEvents();
-      setEvents(eventsData.data || []);
+      setEvents(eventsData.data?.events || []);
       
       setActiveView('dashboard');
       return { success: true };
