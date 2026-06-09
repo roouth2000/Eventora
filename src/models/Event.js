@@ -243,10 +243,10 @@ Event.init(
 );
 
 /**
- * Hook: generate a unique URL-safe slug from the title before creating.
+ * Hook: generate a unique URL-safe slug from the title before validating.
  */
-Event.addHook('beforeCreate', async (event) => {
-  if (!event.slug) {
+Event.addHook('beforeValidate', async (event) => {
+  if (!event.slug && event.title) {
     const base = event.title
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
