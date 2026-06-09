@@ -67,7 +67,7 @@ function MainLayout() {
   // Render view depending on active state
   const renderView = () => {
     // Protected views mapping: redirect to Auth if no token
-    if (!token && (activeView === 'event-portal' || activeView === 'profile')) {
+    if (!token && (activeView === 'profile')) {
       return <Auth />;
     }
 

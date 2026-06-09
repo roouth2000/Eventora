@@ -145,6 +145,91 @@ async function getEventById(req, res, next) {
 
 /**
  * @swagger
+ * /events/slug/{slug}:
+ *   get:
+ *     summary: Get event by slug (public — used by QR code scan links)
+ *     description: |
+ *       Fetches a single published event by its URL-safe slug.
+ *       **No authentication required.** This endpoint is intentionally public so that
+ *       scanning an event QR code lands guests directly on the event registration page
+ *       without any login prompt.
+ *
+ *       **QR Code URL Format:**
+ *       ```
+ *       [Frontend-Origin]/events/[slug]
+ *       ```
+ *       The frontend reads the URL path on load and calls this endpoint to hydrate the
+ *       public event detail view.
+ *     tags: [Events]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema: { type: string, example: "tech-summit-2026-a1" }
+ *         description: URL-safe event slug (auto-generated from the event title)
+ *     responses:
+ *       200:
+ *         description: Event details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     event:
+ *                       type: object
+ *                       properties:
+ *                         id: { type: integer }
+ *                         title: { type: string }
+ *                         slug: { type: string }
+ *                         description: { type: string }
+ *                         category: { type: string }
+ *                         startDate: { type: string, format: date-time }
+ *                         endDate: { type: string, format: date-time }
+ *                         venueName: { type: string }
+ *                         venueCity: { type: string }
+ *                         venueCountry: { type: string }
+ *                         capacity: { type: integer }
+ *                         attendeeCount: { type: integer }
+ *                         isFree: { type: boolean }
+ *                         ticketPrice: { type: number }
+ *                         status: { type: string }
+ *       404:
+ *         description: Event not found or not published
+ */
+async function getEventBySlug(req, res, next) {
+  try {
+    const { slug } = req.params;
+
+    // Validate slug format to prevent injection or oversized input
+    if (!slug || typeof slug !== 'string' || slug.length > 200 || !/^[a-z0-9-]+$/.test(slug)) {
+      return res.status(400).json({ success: false, message: 'Invalid event slug.' });
+    }
+
+    const event = await Event.findOne({
+      where: { slug, status: 'published', isDeleted: false },
+      include: [
+        { model: User, as: 'organizer', attributes: ['id', 'name', 'email', 'avatar'] },
+        { model: User, as: 'attendees', attributes: ['id', 'name', 'avatar'] },
+      ],
+    });
+
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found or not available.' });
+    }
+
+    return res.status(200).json({ success: true, data: { event } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @swagger
  * /events:
  *   post:
  *     summary: Create a new event
@@ -471,6 +556,7 @@ async function getMyEvents(req, res, next) {
 module.exports = {
   getAllEvents,
   getEventById,
+  getEventBySlug,
   createEvent,
   updateEvent,
   deleteEvent,

@@ -145,8 +145,14 @@ export const AppProvider = ({ children }) => {
     try {
       const allEventsData = await api.getEvents();
       setEvents(allEventsData.data?.events || []);
-      const myEventsData = await api.getMyEvents();
-      setMyEvents(myEventsData.data?.events || []);
+      
+      const activeToken = token || sessionStorage.getItem('token');
+      if (activeToken) {
+        const myEventsData = await api.getMyEvents();
+        setMyEvents(myEventsData.data?.events || []);
+      } else {
+        setMyEvents([]);
+      }
     } catch (err) {
       setBackendError(err.message || 'Failed to sync backend data.');
     } finally {

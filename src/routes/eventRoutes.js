@@ -2,7 +2,7 @@
 
 const express = require('express');
 const {
-  getAllEvents, getEventById, createEvent,
+  getAllEvents, getEventById, getEventBySlug, createEvent,
   updateEvent, deleteEvent, attendEvent, getMyEvents,
 } = require('../controllers/eventController');
 const { createEventValidator, updateEventValidator } = require('../validators/eventValidators');
@@ -14,6 +14,7 @@ const router = express.Router();
 // Public routes
 router.get('/', getAllEvents);
 router.get('/my', authenticate, getMyEvents);
+router.get('/slug/:slug', getEventBySlug);   // Public — slug lookup for QR code scans
 router.get('/:id', getEventById);
 
 // Protected routes — require authentication

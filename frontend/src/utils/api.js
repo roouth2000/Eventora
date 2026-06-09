@@ -112,6 +112,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  // Public — no auth token required (used by QR code scan landing page)
+  getEventBySlug: async (slug) => {
+    const res = await fetch(`${getBaseUrl()}/events/slug/${encodeURIComponent(slug)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' } // No Authorization header
+    });
+    return handleResponse(res);
+  },
+
   createEvent: async (eventData) => {
     const res = await fetch(`${getBaseUrl()}/events`, {
       method: 'POST',

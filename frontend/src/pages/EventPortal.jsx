@@ -15,7 +15,8 @@ export default function EventPortal() {
     triggerAttendEvent,
     triggerDeleteEvent,
     triggerUpdateEvent,
-    showToast
+    showToast,
+    setActiveView
   } = useContext(AppContext);
 
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'attending', 'organized'
@@ -464,7 +465,9 @@ export default function EventPortal() {
                       </button>
                     )
                   ) : (
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Login to Attend</span>
+                    <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={() => setActiveView('auth')}>
+                      Login to Attend
+                    </button>
                   )}
                 </div>
               </div>
