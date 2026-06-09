@@ -12,6 +12,9 @@ import StallQrCodes from './pages/StallQrCodes';
 import RedemptionScanner from './pages/RedemptionScanner';
 import RedemptionReport from './pages/RedemptionReport';
 import Settings from './pages/Settings';
+import Auth from './pages/Auth';
+import EventPortal from './pages/EventPortal';
+import Profile from './pages/Profile';
 
 // Icons
 import {
@@ -28,7 +31,10 @@ import {
   Sun,
   Moon,
   Bell,
-  Search
+  Search,
+  Globe,
+  User,
+  LogIn
 } from 'lucide-react';
 
 function MainLayout() {
@@ -38,14 +44,26 @@ function MainLayout() {
     theme,
     toggleTheme,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    token,
+    user,
+    logoutUser
   } = useContext(AppContext);
 
   // Render view depending on active state
   const renderView = () => {
+    // Protected views mapping: redirect to Auth if no token
+    if (!token && (activeView === 'event-portal' || activeView === 'profile')) {
+      return <Auth />;
+    }
+
     switch (activeView) {
       case 'dashboard':
         return <Dashboard />;
+      case 'event-portal':
+        return <EventPortal />;
+      case 'profile':
+        return <Profile />;
       case 'attendees':
         return <Attendees />;
       case 'check-in':
@@ -64,6 +82,8 @@ function MainLayout() {
         return <RedemptionReport />;
       case 'settings':
         return <Settings />;
+      case 'auth':
+        return <Auth />;
       default:
         return <Dashboard />;
     }
@@ -76,8 +96,8 @@ function MainLayout() {
         <div className="logo-container">
           <div className="logo-icon">E</div>
           <div className="logo-text">
-            <h1>Event Privilege</h1>
-            <span>Manager</span>
+            <h1>Eventora</h1>
+            <span>EPM Console</span>
           </div>
         </div>
 
@@ -90,6 +110,13 @@ function MainLayout() {
           >
             <LayoutGrid size={18} />
             <span>Dashboard</span>
+          </div>
+          <div 
+            className={`nav-link ${activeView === 'event-portal' ? 'active' : ''}`}
+            onClick={() => setActiveView('event-portal')}
+          >
+            <Globe size={18} />
+            <span>Event Portal</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'attendees' ? 'active' : ''}`}
@@ -159,6 +186,23 @@ function MainLayout() {
 
         <div className="nav-section" style={{ marginTop: 'auto' }}>
           <div className="nav-section-title">System</div>
+          {token ? (
+            <div 
+              className={`nav-link ${activeView === 'profile' ? 'active' : ''}`}
+              onClick={() => setActiveView('profile')}
+            >
+              <User size={18} />
+              <span>My Profile</span>
+            </div>
+          ) : (
+            <div 
+              className={`nav-link ${activeView === 'auth' ? 'active' : ''}`}
+              onClick={() => setActiveView('auth')}
+            >
+              <LogIn size={18} />
+              <span>Login / Sign Up</span>
+            </div>
+          )}
           <div 
             className={`nav-link ${activeView === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveView('settings')}
@@ -177,7 +221,7 @@ function MainLayout() {
             <Search />
             <input 
               type="text" 
-              placeholder="Search attendees, privileges, stalls..." 
+              placeholder="Search..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -196,13 +240,35 @@ function MainLayout() {
             </button>
 
             {/* Profile widget */}
-            <div className="user-profile-widget">
-              <div className="avatar-badge">AD</div>
-              <div className="user-profile-info">
-                <span className="user-profile-name">Admin</span>
-                <span className="user-profile-role">Organizer</span>
+            {token && user ? (
+              <div 
+                className="user-profile-widget" 
+                onClick={() => setActiveView('profile')}
+                style={{ cursor: 'pointer' }}
+                title="View Profile"
+              >
+                <div className="avatar-badge">
+                  {user.name ? user.name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2) : 'AD'}
+                </div>
+                <div className="user-profile-info">
+                  <span className="user-profile-name">{user.name}</span>
+                  <span className="user-profile-role" style={{ textTransform: 'capitalize' }}>{user.role}</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div 
+                className="user-profile-widget" 
+                onClick={() => setActiveView('auth')}
+                style={{ cursor: 'pointer' }}
+                title="Login"
+              >
+                <div className="avatar-badge" style={{ backgroundColor: 'var(--text-secondary)' }}>?</div>
+                <div className="user-profile-info">
+                  <span className="user-profile-name">Guest Mode</span>
+                  <span className="user-profile-role">Click to log in</span>
+                </div>
+              </div>
+            )}
           </div>
         </header>
 

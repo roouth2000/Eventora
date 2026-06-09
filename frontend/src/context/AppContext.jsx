@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { api } from '../utils/api';
 
 export const AppContext = createContext();
 
@@ -12,9 +13,7 @@ const DEFAULT_ATTENDEES = [
   { id: 7, name: 'Karan Verma', company: 'Verma Solutions', email: 'karan.verma@example.com', phone: '+91 9800079446', ticketType: 'VIP', status: 'Not Checked In', code: 'EPM-1007', createdAt: 'Jun 2, 2026' },
   { id: 8, name: 'Meera Nair', company: 'Nair Studios', email: 'meera.nair@example.com', phone: '+91 9800092687', ticketType: 'Premium', status: 'Checked In', code: 'EPM-1008', createdAt: 'Jun 1, 2026' },
   { id: 9, name: 'Aditya Rao', company: 'Rao Logistics', email: 'aditya.rao@example.com', phone: '+91 9800105928', ticketType: 'Standard', status: 'Checked In', code: 'EPM-1009', createdAt: 'May 31, 2026' },
-  { id: 10, name: 'Isha Kapoor', company: 'Kapoor Designs', email: 'isha.kapoor@example.com', phone: '+91 9800119169', ticketType: 'Standard', status: 'Not Checked In', code: 'EPM-1010', createdAt: 'May 30, 2026' },
-  { id: 11, name: 'Raj Malhotra', company: 'Malhotra Retail', email: 'raj.malhotra@example.com', phone: '+91 9800125432', ticketType: 'Premium', status: 'Checked In', code: 'EPM-1011', createdAt: 'May 29, 2026' },
-  { id: 12, name: 'Kavita Sen', company: 'Sen Media', email: 'kavita.sen@example.com', phone: '+91 9800138765', ticketType: 'VIP', status: 'Checked In', code: 'EPM-1012', createdAt: 'May 28, 2026' }
+  { id: 10, name: 'Isha Kapoor', company: 'Kapoor Designs', email: 'isha.kapoor@example.com', phone: '+91 9800119169', ticketType: 'Standard', status: 'Not Checked In', code: 'EPM-1010', createdAt: 'May 30, 2026' }
 ];
 
 const DEFAULT_TICKET_TYPES = [
@@ -40,11 +39,24 @@ const DEFAULT_REDEMPTIONS = [
 ];
 
 export const AppProvider = ({ children }) => {
-  // Load state from localStorage or fallback to defaults
+  // Theme & Views state
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [activeView, setActiveView] = useState(() => localStorage.getItem('activeView') || 'dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
+  // Authentication State
+  // TODO(security): Token is cached in sessionStorage for reload resilience, in-memory for security
+  const [token, setToken] = useState(() => sessionStorage.getItem('token') || null);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // API Backend States
+  const [events, setEvents] = useState([]);
+  const [myEvents, setMyEvents] = useState([]);
+  const [backendLoading, setBackendLoading] = useState(false);
+  const [backendError, setBackendError] = useState('');
+
+  // Local/Sandbox Databases
   const [attendees, setAttendees] = useState(() => {
     const local = localStorage.getItem('attendees');
     return local ? JSON.parse(local) : DEFAULT_ATTENDEES;
@@ -65,7 +77,7 @@ export const AppProvider = ({ children }) => {
     return local ? JSON.parse(local) : DEFAULT_REDEMPTIONS;
   });
 
-  // Sync state with localStorage on changes
+  // Syncing layout states
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
@@ -75,6 +87,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('activeView', activeView);
   }, [activeView]);
 
+  // Syncing Sandbox States
   useEffect(() => {
     localStorage.setItem('attendees', JSON.stringify(attendees));
   }, [attendees]);
@@ -91,7 +104,154 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('redemptions', JSON.stringify(redemptions));
   }, [redemptions]);
 
-  // Actions
+  // Bootstrap Auth check
+  useEffect(() => {
+    const initAuth = async () => {
+      const activeToken = sessionStorage.getItem('token');
+      if (activeToken) {
+        try {
+          const profile = await api.getProfile();
+          setUser(profile.data);
+          // Auto load events
+          loadBackendData();
+        } catch (err) {
+          console.error('Session validation failed', err);
+          logoutUser();
+        }
+      }
+      setAuthLoading(false);
+    };
+    initAuth();
+  }, [token]);
+
+  const loadBackendData = async () => {
+    setBackendLoading(true);
+    try {
+      const allEventsData = await api.getEvents();
+      setEvents(allEventsData.data || []);
+      const myEventsData = await api.getMyEvents();
+      setMyEvents(myEventsData.data || []);
+    } catch (err) {
+      setBackendError(err.message || 'Failed to sync backend data.');
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+
+  // Auth Operations
+  const loginUser = async (email, password) => {
+    setAuthLoading(true);
+    setBackendError('');
+    try {
+      const res = await api.login(email, password);
+      const userToken = res.data.token;
+      sessionStorage.setItem('token', userToken);
+      setToken(userToken);
+      
+      const profile = await api.getProfile();
+      setUser(profile.data);
+      
+      // Load events list
+      const eventsData = await api.getEvents();
+      setEvents(eventsData.data || []);
+      
+      setActiveView('dashboard');
+      return { success: true };
+    } catch (err) {
+      setBackendError(err.message);
+      return { success: false, message: err.message };
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const registerUser = async (name, email, password, role) => {
+    setAuthLoading(true);
+    setBackendError('');
+    try {
+      await api.register(name, email, password, role);
+      // Auto login after sign up
+      return await loginUser(email, password);
+    } catch (err) {
+      setBackendError(err.message);
+      return { success: false, message: err.message };
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const logoutUser = () => {
+    sessionStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    setEvents([]);
+    setMyEvents([]);
+    setActiveView('dashboard');
+  };
+
+  const syncUserProfile = async () => {
+    try {
+      const profile = await api.getProfile();
+      setUser(profile.data);
+    } catch (err) {
+      console.error('Failed to sync profile', err);
+    }
+  };
+
+  // Backend Events operations
+  const triggerCreateEvent = async (eventData) => {
+    setBackendLoading(true);
+    try {
+      await api.createEvent(eventData);
+      await loadBackendData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+
+  const triggerUpdateEvent = async (id, eventData) => {
+    setBackendLoading(true);
+    try {
+      await api.updateEvent(id, eventData);
+      await loadBackendData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+
+  const triggerDeleteEvent = async (id) => {
+    setBackendLoading(true);
+    try {
+      await api.deleteEvent(id);
+      await loadBackendData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+
+  const triggerAttendEvent = async (id) => {
+    setBackendLoading(true);
+    try {
+      await api.attendEvent(id);
+      await loadBackendData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+
+  // Sandbox Operations (EPM modules)
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -158,7 +318,6 @@ export const AppProvider = ({ children }) => {
       return { success: false, message: 'Invalid ticket / attendee code.' };
     }
 
-    // Check if privilege exists and is active
     const priv = privileges.find(p => p.name === privilegeName);
     if (!priv) {
       return { success: false, message: 'Privilege not found.' };
@@ -167,12 +326,10 @@ export const AppProvider = ({ children }) => {
       return { success: false, message: 'Privilege is currently inactive/disabled.' };
     }
 
-    // Check if attendee is checked in
     if (attendee.status !== 'Checked In') {
       return { success: false, message: `${attendee.name} is not checked in at the main gate.` };
     }
 
-    // Check if attendee ticket allows this privilege
     const ticketConfig = ticketTypes.find(t => t.name === attendee.ticketType);
     if (!ticketConfig || !ticketConfig.privileges.includes(privilegeName)) {
       const failedRedemption = {
@@ -188,7 +345,6 @@ export const AppProvider = ({ children }) => {
       return { success: false, message: `Access Denied: Ticket tier [${attendee.ticketType}] does not have access to ${privilegeName}.` };
     }
 
-    // Check if already redeemed
     const alreadyRedeemed = redemptions.some(r => r.attendeeCode.toUpperCase() === cleanedCode && r.privilegeName === privilegeName && r.status === 'success');
     if (alreadyRedeemed) {
       const failedRedemption = {
@@ -204,7 +360,6 @@ export const AppProvider = ({ children }) => {
       return { success: false, message: `Already Redeemed: ${attendee.name} has already claimed ${privilegeName}.` };
     }
 
-    // Successful redemption
     const newRedemption = {
       id: Date.now(),
       attendeeName: attendee.name,
@@ -259,6 +414,25 @@ export const AppProvider = ({ children }) => {
       setActiveView,
       searchQuery,
       setSearchQuery,
+      // Auth States
+      token,
+      user,
+      authLoading,
+      loginUser,
+      registerUser,
+      logoutUser,
+      syncUserProfile,
+      // API Backend
+      events,
+      myEvents,
+      backendLoading,
+      backendError,
+      loadBackendData,
+      triggerCreateEvent,
+      triggerUpdateEvent,
+      triggerDeleteEvent,
+      triggerAttendEvent,
+      // Sandbox States
       attendees,
       ticketTypes,
       privileges,
