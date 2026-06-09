@@ -44,6 +44,22 @@ export const AppProvider = ({ children }) => {
   const [activeView, setActiveView] = useState(() => localStorage.getItem('activeView') || 'dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Toast notifications state
+  const [toast, setToast] = useState(null); // { message, type }
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Authentication State
   // TODO(security): Token is cached in sessionStorage for reload resilience, in-memory for security
   const [token, setToken] = useState(() => sessionStorage.getItem('token') || null);
@@ -111,7 +127,7 @@ export const AppProvider = ({ children }) => {
       if (activeToken) {
         try {
           const profile = await api.getProfile();
-          setUser(profile.data);
+          setUser(profile.data?.user || profile.data);
           // Auto load events
           loadBackendData();
         } catch (err) {
@@ -149,7 +165,7 @@ export const AppProvider = ({ children }) => {
       setToken(userToken);
       
       const profile = await api.getProfile();
-      setUser(profile.data);
+      setUser(profile.data?.user);
       
       // Load events list
       const eventsData = await api.getEvents();
@@ -192,7 +208,7 @@ export const AppProvider = ({ children }) => {
   const syncUserProfile = async () => {
     try {
       const profile = await api.getProfile();
-      setUser(profile.data);
+      setUser(profile.data?.user || profile.data);
     } catch (err) {
       console.error('Failed to sync profile', err);
     }
@@ -414,6 +430,10 @@ export const AppProvider = ({ children }) => {
       setActiveView,
       searchQuery,
       setSearchQuery,
+      // Toast notifications state & functions
+      toast,
+      setToast,
+      showToast,
       // Auth States
       token,
       user,

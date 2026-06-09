@@ -34,7 +34,11 @@ import {
   Search,
   Globe,
   User,
-  LogIn
+  LogIn,
+  X,
+  AlertCircle,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 
 function MainLayout() {
@@ -47,7 +51,9 @@ function MainLayout() {
     setSearchQuery,
     token,
     user,
-    logoutUser
+    logoutUser,
+    toast,
+    setToast
   } = useContext(AppContext);
 
   // Render view depending on active state
@@ -91,6 +97,19 @@ function MainLayout() {
 
   return (
     <div className="app-container">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.type === 'success' && <CheckCircle2 size={18} style={{ color: 'var(--accent-green)' }} />}
+          {toast.type === 'error' && <AlertCircle size={18} style={{ color: '#ff7675' }} />}
+          {toast.type === 'warning' && <AlertCircle size={18} style={{ color: 'var(--accent-orange)' }} />}
+          {toast.type === 'info' && <Info size={18} style={{ color: 'var(--accent-purple)' }} />}
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{toast.message}</span>
+          <button className="toast-close" onClick={() => setToast(null)}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div className="logo-container">

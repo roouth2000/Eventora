@@ -1,82 +1,17 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Search, Printer, Eye, Download, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
-// Offline-compatible SVG QR Code component that draws a realistic QR grid
+// Real scannable SVG QR Code component using qrcode.react
 function MiniQrCode({ value }) {
   return (
-    <svg viewBox="0 0 100 100" width="100%" height="100%">
-      {/* Background */}
-      <rect width="100%" height="100%" fill="white" />
-      
-      {/* Corner Finder Pattern Top-Left */}
-      <rect x="5" y="5" width="25" height="25" fill="black" />
-      <rect x="9" y="9" width="17" height="17" fill="white" />
-      <rect x="13" y="13" width="9" height="9" fill="black" />
-      
-      {/* Corner Finder Pattern Top-Right */}
-      <rect x="70" y="5" width="25" height="25" fill="black" />
-      <rect x="74" y="9" width="17" height="17" fill="white" />
-      <rect x="78" y="13" width="9" height="9" fill="black" />
-      
-      {/* Corner Finder Pattern Bottom-Left */}
-      <rect x="5" y="70" width="25" height="25" fill="black" />
-      <rect x="9" y="74" width="17" height="17" fill="white" />
-      <rect x="13" y="78" width="9" height="9" fill="black" />
-      
-      {/* Alignment Pattern Bottom-Right */}
-      <rect x="75" y="75" width="10" height="10" fill="black" />
-      <rect x="77" y="77" width="6" height="6" fill="white" />
-      <rect x="79" y="79" width="2" height="2" fill="black" />
-      
-      {/* Dummy Pixel Data based on string hashing to make each look unique */}
-      {(() => {
-        const hash = value.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const rects = [];
-        for (let i = 0; i < 12; i++) {
-          for (let j = 0; j < 12; j++) {
-            // Avoid corner areas
-            const inTopLeft = i < 4 && j < 4;
-            const inTopRight = i < 4 && j > 7;
-            const inBottomLeft = i > 7 && j < 4;
-            const inBottomRight = i > 7 && j > 7;
-            
-            if (!inTopLeft && !inTopRight && !inBottomLeft && !inBottomRight) {
-              const seed = (hash + (i * 13) + (j * 37)) % 100;
-              if (seed > 40) { // ~60% density
-                rects.push(
-                  <rect 
-                    key={`${i}-${j}`} 
-                    x={35 + i * 3} 
-                    y={35 + j * 3} 
-                    width="2.5" 
-                    height="2.5" 
-                    fill="black" 
-                  />
-                );
-              }
-            }
-          }
-        }
-        
-        // Add random alignment blocks
-        const blocks = [
-          { x: 40, y: 10 }, { x: 55, y: 15 }, { x: 45, y: 25 },
-          { x: 15, y: 45 }, { x: 20, y: 55 }, { x: 10, y: 60 },
-          { x: 75, y: 40 }, { x: 85, y: 50 }, { x: 90, y: 65 }
-        ];
-        blocks.forEach((b, idx) => {
-          const active = (hash + idx) % 2 === 0;
-          if (active) {
-            rects.push(
-              <rect key={`block-${idx}`} x={b.x} y={b.y} width="4" height="4" fill="black" />
-            );
-          }
-        });
-
-        return rects;
-      })()}
-    </svg>
+    <QRCodeSVG 
+      value={value} 
+      size={140} 
+      level="M" 
+      style={{ width: '100%', height: '100%' }}
+    />
   );
 }
 
