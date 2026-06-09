@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AppProvider, AppContext } from './context/AppContext';
 
 // Pages
@@ -38,7 +38,8 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
-  Info
+  Info,
+  Menu
 } from 'lucide-react';
 
 function MainLayout() {
@@ -55,6 +56,13 @@ function MainLayout() {
     toast,
     setToast
   } = useContext(AppContext);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const changeView = (view) => {
+    setActiveView(view);
+    setIsSidebarOpen(false);
+  };
 
   // Render view depending on active state
   const renderView = () => {
@@ -110,14 +118,22 @@ function MainLayout() {
           </button>
         </div>
       )}
+      {/* Sidebar Overlay for Mobile backdrop clicks */}
+      {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="logo-container">
-          <div className="logo-icon">E</div>
-          <div className="logo-text">
-            <h1>Eventora</h1>
-            <span>EPM Console</span>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div className="logo-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="logo-icon">E</div>
+            <div className="logo-text">
+              <h1>Eventora</h1>
+              <span>EPM Console</span>
+            </div>
           </div>
+          <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} title="Close Menu">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Navigation Groups */}
@@ -125,35 +141,35 @@ function MainLayout() {
           <div className="nav-section-title">Main</div>
           <div 
             className={`nav-link ${activeView === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveView('dashboard')}
+            onClick={() => changeView('dashboard')}
           >
             <LayoutGrid size={18} />
             <span>Dashboard</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'event-portal' ? 'active' : ''}`}
-            onClick={() => setActiveView('event-portal')}
+            onClick={() => changeView('event-portal')}
           >
             <Globe size={18} />
             <span>Event Portal</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'attendees' ? 'active' : ''}`}
-            onClick={() => setActiveView('attendees')}
+            onClick={() => changeView('attendees')}
           >
             <Users size={18} />
             <span>Attendees</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'check-in' ? 'active' : ''}`}
-            onClick={() => setActiveView('check-in')}
+            onClick={() => changeView('check-in')}
           >
             <ScanLine size={18} />
             <span>Entrance Check-in</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'id-cards' ? 'active' : ''}`}
-            onClick={() => setActiveView('id-cards')}
+            onClick={() => changeView('id-cards')}
           >
             <CreditCard size={18} />
             <span>ID Cards</span>
@@ -164,21 +180,21 @@ function MainLayout() {
           <div className="nav-section-title">Privilege</div>
           <div 
             className={`nav-link ${activeView === 'tickets' ? 'active' : ''}`}
-            onClick={() => setActiveView('tickets')}
+            onClick={() => changeView('tickets')}
           >
             <Tag size={18} />
             <span>Ticket Types</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'privileges' ? 'active' : ''}`}
-            onClick={() => setActiveView('privileges')}
+            onClick={() => changeView('privileges')}
           >
             <Award size={18} />
             <span>Privileges</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'stall-qr' ? 'active' : ''}`}
-            onClick={() => setActiveView('stall-qr')}
+            onClick={() => changeView('stall-qr')}
           >
             <QrCode size={18} />
             <span>Stall QR Codes</span>
@@ -189,14 +205,14 @@ function MainLayout() {
           <div className="nav-section-title">Redemption</div>
           <div 
             className={`nav-link ${activeView === 'scanner' ? 'active' : ''}`}
-            onClick={() => setActiveView('scanner')}
+            onClick={() => changeView('scanner')}
           >
             <Scan size={18} />
             <span>Redemption Scanner</span>
           </div>
           <div 
             className={`nav-link ${activeView === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveView('reports')}
+            onClick={() => changeView('reports')}
           >
             <FileText size={18} />
             <span>Redemption Report</span>
@@ -208,7 +224,7 @@ function MainLayout() {
           {token ? (
             <div 
               className={`nav-link ${activeView === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveView('profile')}
+              onClick={() => changeView('profile')}
             >
               <User size={18} />
               <span>My Profile</span>
@@ -216,7 +232,7 @@ function MainLayout() {
           ) : (
             <div 
               className={`nav-link ${activeView === 'auth' ? 'active' : ''}`}
-              onClick={() => setActiveView('auth')}
+              onClick={() => changeView('auth')}
             >
               <LogIn size={18} />
               <span>Login / Sign Up</span>
@@ -224,7 +240,7 @@ function MainLayout() {
           )}
           <div 
             className={`nav-link ${activeView === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveView('settings')}
+            onClick={() => changeView('settings')}
           >
             <SettingsIcon size={18} />
             <span>Settings</span>
@@ -236,6 +252,10 @@ function MainLayout() {
       <div className="main-wrapper">
         {/* Top Header Row */}
         <header className="top-navbar">
+          <button className="mobile-toggle-btn" onClick={() => setIsSidebarOpen(true)} title="Open Menu">
+            <Menu size={20} />
+          </button>
+
           <div className="search-box">
             <Search />
             <input 

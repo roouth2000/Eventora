@@ -34,7 +34,7 @@ const createEventValidator = [
   body('venueZipCode').optional().trim().isLength({ max: 20 }),
   body('isOnline').optional().isBoolean(),
   body('onlineLink')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
     .isURL({ protocols: ['https'], require_protocol: true })
     .withMessage('Online link must be a valid HTTPS URL'),
@@ -54,7 +54,7 @@ const createEventValidator = [
     }),
 
   body('capacity')
-    .optional()
+    .optional({ checkFalsy: true })
     .isInt({ min: 1, max: 1000000 }).withMessage('Capacity must be between 1 and 1,000,000'),
 
   body('ticketPrice')

@@ -31,7 +31,12 @@ const getHeaders = (token = null) => {
 const handleResponse = async (response) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.message || `API Error: Status ${response.status}`);
+    let errorMsg = data.message || `API Error: Status ${response.status}`;
+    if (data.errors && Array.isArray(data.errors)) {
+      const details = data.errors.map(err => `${err.field}: ${err.message}`).join(', ');
+      errorMsg = `${errorMsg} - ${details}`;
+    }
+    throw new Error(errorMsg);
   }
   return data;
 };

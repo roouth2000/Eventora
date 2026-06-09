@@ -68,7 +68,9 @@ export default function EventPortal() {
     setErrorMsg('');
 
     if (new Date(endDate) <= new Date(startDate)) {
-      setErrorMsg('End Date must be after Start Date');
+      const msg = 'End Date must be after Start Date';
+      setErrorMsg(msg);
+      showToast(msg, 'error');
       return;
     }
 
@@ -86,7 +88,7 @@ export default function EventPortal() {
       venueCountry: venueCountry || 'India',
       venueZipCode: venueZipCode || '110001',
       isOnline: false,
-      onlineLink: '',
+      onlineLink: undefined,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       capacity: capacity ? parseInt(capacity, 10) : 100,
@@ -103,6 +105,7 @@ export default function EventPortal() {
       showToast('Event created successfully!', 'success');
     } else {
       setErrorMsg(res.message || 'Failed to create event. Verify fields.');
+      showToast(res.message || 'Failed to create event. Verify fields.', 'error');
     }
   };
 
@@ -148,7 +151,9 @@ export default function EventPortal() {
     setErrorMsg('');
 
     if (new Date(endDate) <= new Date(startDate)) {
-      setErrorMsg('End Date must be after Start Date');
+      const msg = 'End Date must be after Start Date';
+      setErrorMsg(msg);
+      showToast(msg, 'error');
       return;
     }
 
@@ -166,7 +171,7 @@ export default function EventPortal() {
       venueCountry: venueCountry || 'India',
       venueZipCode: venueZipCode || '110001',
       isOnline: false,
-      onlineLink: '',
+      onlineLink: undefined,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       capacity: capacity ? parseInt(capacity, 10) : 100,
@@ -184,6 +189,7 @@ export default function EventPortal() {
       showToast('Event updated successfully!', 'success');
     } else {
       setErrorMsg(res.message || 'Failed to update event. Verify fields.');
+      showToast(res.message || 'Failed to update event. Verify fields.', 'error');
     }
   };
 
@@ -647,11 +653,11 @@ export default function EventPortal() {
               </p>
               
               <div className="badge-qr-container" style={{ width: '180px', height: '180px', padding: '14px', margin: '24px auto 16px' }}>
-                <EventQrCodeSvg value={`https://eventora.heavenwebtechnologies.com/events/${qrEvent.slug}`} />
+                <EventQrCodeSvg value={`${window.location.origin}/events/${qrEvent.slug}`} />
               </div>
               
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', background: 'var(--bg-primary)', padding: '6px 12px', borderRadius: '6px', wordBreak: 'break-all', fontFamily: 'monospace' }}>
-                https://eventora.heavenwebtechnologies.com/events/{qrEvent.slug}
+                {window.location.origin}/events/{qrEvent.slug}
               </div>
             </div>
 
