@@ -176,8 +176,16 @@ export const AppProvider = ({ children }) => {
       // Load events list
       const eventsData = await api.getEvents();
       setEvents(eventsData.data?.events || []);
-      
-      setActiveView('dashboard');
+
+      // If user came from a QR code scan, redirect to event-portal after login
+      const pendingSlug = sessionStorage.getItem('pendingEventSlug');
+      if (pendingSlug) {
+        sessionStorage.removeItem('pendingEventSlug');
+        sessionStorage.removeItem('pendingEventTitle');
+        setActiveView('event-portal');
+      } else {
+        setActiveView('dashboard');
+      }
       return { success: true };
     } catch (err) {
       setBackendError(err.message);

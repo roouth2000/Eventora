@@ -232,7 +232,7 @@ export default function EventDetail({ slug, onGoToLogin }) {
               className="btn btn-primary event-register-btn"
               style={{ background: isFull ? '#636e72' : catColor, width: '100%', fontSize: '15px', padding: '14px', marginTop: '16px' }}
               disabled={isFull}
-              onClick={onGoToLogin}
+              onClick={() => onGoToLogin(event.title)}
             >
               {isFull ? '🚫 Event Full' : '✅ Register Now'}
             </button>
@@ -263,7 +263,7 @@ export default function EventDetail({ slug, onGoToLogin }) {
       {/* Footer CTA */}
       <div className="event-detail-footer">
         <span>Powered by <strong>Eventora</strong></span>
-        <button className="btn btn-secondary" style={{ fontSize: '13px' }} onClick={onGoToLogin}>
+        <button className="btn btn-secondary" style={{ fontSize: '13px' }} onClick={() => onGoToLogin(null)}>
           Login / Sign Up
         </button>
       </div>

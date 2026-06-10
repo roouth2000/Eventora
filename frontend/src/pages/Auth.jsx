@@ -6,6 +6,9 @@ export default function Auth() {
   const { loginUser, registerUser, setActiveView } = useContext(AppContext);
   const [isLogin, setIsLogin] = useState(true);
 
+  // Check if user came from a QR code scan
+  const pendingEventTitle = sessionStorage.getItem('pendingEventTitle') || null;
+
   // Form states
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,6 +72,25 @@ export default function Auth() {
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '6px' }}>
             {isLogin ? 'Sign in to access event portals and privileges' : 'Create an organizer or attendee account'}
           </p>
+          {pendingEventTitle && (
+            <div style={{
+              marginTop: '14px',
+              background: 'linear-gradient(135deg, rgba(108,92,231,0.12) 0%, rgba(162,155,254,0.1) 100%)',
+              border: '1px solid rgba(108,92,231,0.25)',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left',
+            }}>
+              <span style={{ fontSize: '18px' }}>🎟</span>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Registering for</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-purple)', marginTop: '2px' }}>{pendingEventTitle}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (

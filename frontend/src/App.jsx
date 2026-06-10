@@ -14,6 +14,7 @@ import RedemptionReport from './pages/RedemptionReport';
 import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import EventPortal from './pages/EventPortal';
+import EventDetail from './pages/EventDetail';
 import Profile from './pages/Profile';
 
 // Icons
@@ -63,6 +64,28 @@ function MainLayout() {
     setActiveView(view);
     setIsSidebarOpen(false);
   };
+
+  // ── QR Code scan path detection ──────────────────────────────────────────
+  // Detect /events/:slug in the URL — render public EventDetail standalone
+  const pathSlugMatch = window.location.pathname.match(/^\/events\/([a-z0-9-]+)$/);
+  if (pathSlugMatch) {
+    const slug = pathSlugMatch[1];
+    const handleGoToLogin = (eventTitle) => {
+      // Save pending event to sessionStorage so loginUser() can redirect back
+      sessionStorage.setItem('pendingEventSlug', slug);
+      if (eventTitle) sessionStorage.setItem('pendingEventTitle', eventTitle);
+      // Clean the URL so the SPA loads normally after login
+      window.history.replaceState({}, '', '/');
+      setActiveView('auth');
+    };
+    return (
+      <EventDetail
+        slug={slug}
+        onGoToLogin={handleGoToLogin}
+      />
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Render view depending on active state
   const renderView = () => {
